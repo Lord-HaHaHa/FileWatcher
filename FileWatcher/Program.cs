@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+﻿
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -124,13 +124,14 @@ public class Watcher
         bool isOpen = true;
         while (isOpen)
         {
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
             isOpen = false;
-            FileStream fs = null;
             try
             {
-                fs = File.Open(path, FileMode.Open, FileAccess.ReadWrite);
-                Console.WriteLine("Thread: is not open");
+                using(Stream stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite))
+                {
+                    Console.WriteLine("Thread: is not open");
+                }
                 //Datei ist nicht geöffnet -> kann importiert werden
             }
             catch(IOException)
@@ -138,12 +139,6 @@ public class Watcher
                 //Datei ist geöffnet -> weiter warten
                 isOpen = true;
                 Console.WriteLine("Thread: is extern open");
-            }
-            finally
-            {
-                Console.WriteLine("finally");
-                if (fs != null)
-                    fs.Close();
             }
         }
         // Aufruf Schnittstellenmakro DOCUframe
