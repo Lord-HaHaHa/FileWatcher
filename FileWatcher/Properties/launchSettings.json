@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "FileWatcher": {
+      "commandName": "Project",
+      "commandLineArgs": "\\\\df59r3\\C\\TEMP\\VorgangExport\\Vorgang"
+    }
+  }
+}
