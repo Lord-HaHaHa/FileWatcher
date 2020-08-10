@@ -26,14 +26,12 @@ public class Watcher
                                  | NotifyFilters.FileName
                                  | NotifyFilters.DirectoryName;
 
-            // Only watch text files.
-            watcher.Filter = "*.txt";
-
+            watcher.Filter = "*.txt*";
             // Add event handlers.
             watcher.Changed += OnChanged;
-            //watcher.Created += OnCreated;
-            //watcher.Deleted += OnChanged;
-            //watcher.Renamed += OnRenamed;
+            watcher.Created += OnCreated;
+            watcher.Deleted += OnDelete;
+            watcher.Renamed += OnRenamed;
 
             // Begin watching.
             watcher.IncludeSubdirectories = true;
@@ -58,39 +56,9 @@ public class Watcher
 
             Console.WriteLine("Main thread: Start a second thread.");
 
-            Thread t = new Thread(delegate () { ThreadProc(e.FullPath); });
+            Thread thread = new Thread(delegate () { ThreadProc(e.FullPath); });
 
-            t.Start();
-
-            /*
-
-            /*
-            process.StartInfo.FileName = "C:\\Users\\michel\\Source\\Repos\\FileWatcherService\\FileWatcherService\\bin\\Debug\\Test.bat";
-            server = "df59r3";
-            datenbank = "BNW";
-
-            //process.StartInfo.Arguments = server + " " + datenbank + " " + e.FullPath;
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardInput = true;
-            process.Start();
-            process.Close();
-            /*
-
-            server = "df59r3";
-            datenbank = "BNW";
-
-            string path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-
-            Console.WriteLine(path);
-
-            process.StartInfo.FileName = path + @"\CallDOCUframe.bat";
-            process.StartInfo.Arguments = server + " " + datenbank + " " + e.FullPath;
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardInput = true;
-            process.Start();
-            process.Close();
-
-            */
+            thread.Start();
         }
     }
 
@@ -109,13 +77,7 @@ public class Watcher
         // is preempted or yields.  Uncomment the Thread.Sleep that
         // follows t.Start() to see the difference.
         t.Start();
-        //Thread.Sleep(0);
-
-        for (int i = 0; i < 20; i++)
-        {
-            Console.WriteLine("Main thread: Do some work.");
-            Thread.Sleep(100);
-        }
+        Thread.Sleep(0);
     }
 
     public static void ThreadProc(String path)
@@ -123,10 +85,11 @@ public class Watcher
         Console.WriteLine("Thread path: " + path);
         bool isOpen = true;
         Thread.Sleep(100);
-        while (isOpen)
+        int i = 0;
+        while (isOpen && i < 10)
         {
-            Console.WriteLine("Waiting");
-            Thread.Sleep(1000);
+            Console.WriteLine("Thread: Waiting");
+            Thread.Sleep(5000);
             isOpen = false;
             try
             {
@@ -137,11 +100,11 @@ public class Watcher
                     using (Process process = new Process())
                     {
                         //Import in DF
-                        process.StartInfo.FileName = @"C:\Users\michel\Source\Repos\FileWatcherService\FileWatcherService\bin\Debug\CallDocuFrame.bat";
+                        process.StartInfo.FileName = @"C:\Program Files (x86)\Herrmann Computer\File Watcher\CallDOCUFrame.bat";
                         server = "df59r3";
                         datenbank = "BNW";
 
-                        process.StartInfo.Arguments = server + " " + datenbank + " " + path;
+                        process.StartInfo.Arguments = server + " " + datenbank + " \"" + path + "\" " + " HCPdateiimport";
                         process.StartInfo.UseShellExecute = false;
                         process.StartInfo.RedirectStandardInput = true;
                         process.Start();
@@ -153,12 +116,49 @@ public class Watcher
             {
                 //Datei ist geöffnet -> weiter warten
                 isOpen = true;
-                Console.WriteLine("Thread: Cant open");
+                Console.WriteLine("Thread: Cant open the file " + path);
             }
+            i++;
         }
     }
 
-    private static void OnRenamed(object source, RenamedEventArgs e) =>
+    private static void OnRenamed(object source, RenamedEventArgs e) { 
         // Specify what is done when a file is renamed.
         Console.WriteLine($"File: {e.OldFullPath} renamed to {e.FullPath}");
+        string installpath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        String paths = e.OldFullPath + "|" + e.FullPath;
+        String function = "HCPfilerename";
+            using (Process process = new Process())
+            {
+            //Import in DF
+            server = "df59r3";
+            datenbank = "BNW";
+            process.StartInfo.FileName = @"C:\Program Files (x86)\Herrmann Computer\File Watcher\CallDOCUFrame.bat";
+                process.StartInfo.Arguments = server + " " + datenbank + " \"" + paths + "\" " + function;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardInput = true;
+                process.Start();
+                process.Close();
+            }
+    }
+    private static void OnDelete(object source, RenamedEventArgs e)
+    {
+        // Specify what is done when a file is renamed.
+        Console.WriteLine($"File: {e.OldFullPath} renamed to {e.FullPath}");
+        string installpath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        String paths = e.OldFullPath + "|" + e.FullPath;
+        String function = "HCPfiledelete";
+        using (Process process = new Process())
+        {
+            //Import in DF
+            server = "df59r3";
+            datenbank = "BNW";
+            process.StartInfo.FileName = @"C:\Program Files (x86)\Herrmann Computer\File Watcher\CallDOCUFrame.bat";
+            process.StartInfo.Arguments = server + " " + datenbank + " \"" + paths + "\" " + function;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardInput = true;
+            process.Start();
+            process.Close();
+        }
+    }
 }
