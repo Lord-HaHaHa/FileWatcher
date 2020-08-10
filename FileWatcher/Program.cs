@@ -17,7 +17,7 @@ public class Watcher
         // Create a new FileSystemWatcher and set its properties.
         using (FileSystemWatcher watcher = new FileSystemWatcher())
         {
-            watcher.Path = @"C:\temp\Daten\Vorgang";
+            watcher.Path = @"\\df59r3\C\TEMP\VorgangExport\Vorgang";
             
             // Watch for changes in LastAccess and LastWrite times, and
             // the renaming of files or directories.
@@ -31,9 +31,9 @@ public class Watcher
 
             // Add event handlers.
             watcher.Changed += OnChanged;
-            watcher.Created += OnCreated;
-            watcher.Deleted += OnChanged;
-            watcher.Renamed += OnRenamed;
+            //watcher.Created += OnCreated;
+            //watcher.Deleted += OnChanged;
+            //watcher.Renamed += OnRenamed;
 
             // Begin watching.
             watcher.IncludeSubdirectories = true;
@@ -122,27 +122,40 @@ public class Watcher
     {
         Console.WriteLine("Thread path: " + path);
         bool isOpen = true;
+        Thread.Sleep(100);
         while (isOpen)
         {
+            Console.WriteLine("Waiting");
             Thread.Sleep(1000);
             isOpen = false;
             try
             {
                 using(Stream stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite))
                 {
-                    Console.WriteLine("Thread: is not open");
+                    Console.WriteLine("Thread: open");
+                    stream.Close();
+                    using (Process process = new Process())
+                    {
+                        //Import in DF
+                        process.StartInfo.FileName = @"C:\Users\michel\Source\Repos\FileWatcherService\FileWatcherService\bin\Debug\CallDocuFrame.bat";
+                        server = "df59r3";
+                        datenbank = "BNW";
+
+                        process.StartInfo.Arguments = server + " " + datenbank + " " + path;
+                        process.StartInfo.UseShellExecute = false;
+                        process.StartInfo.RedirectStandardInput = true;
+                        process.Start();
+                        process.Close();
+                    }
                 }
-                //Datei ist nicht geöffnet -> kann importiert werden
             }
             catch(IOException)
             {
                 //Datei ist geöffnet -> weiter warten
                 isOpen = true;
-                Console.WriteLine("Thread: is extern open");
+                Console.WriteLine("Thread: Cant open");
             }
         }
-        // Aufruf Schnittstellenmakro DOCUframe
-        Console.WriteLine("Thread: Open DF");
     }
 
     private static void OnRenamed(object source, RenamedEventArgs e) =>
