@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -17,7 +16,7 @@ public class Watcher
         // Create a new FileSystemWatcher and set its properties.
         using (FileSystemWatcher watcher = new FileSystemWatcher())
         {
-            watcher.Path = @"\\df59r3\C\TEMP\VorgangExport\Vorgang";
+            watcher.Path = @"\\df59r3\C\TEMP\VorgangExport\Vorgang"; // Überwachter Pfad
             
             // Watch for changes in LastAccess and LastWrite times, and
             // the renaming of files or directories.
@@ -26,7 +25,7 @@ public class Watcher
                                  | NotifyFilters.FileName
                                  | NotifyFilters.DirectoryName;
 
-            watcher.Filter = "*.txt*";
+            watcher.Filter = "*.*";
             // Add event handlers.
             watcher.Changed += OnChanged;
             watcher.Created += OnCreated;
@@ -86,13 +85,14 @@ public class Watcher
         bool isOpen = true;
         Thread.Sleep(100);
         int i = 0;
-        while (isOpen && i < 10)
+        while (isOpen && i < 10) // Schleife für Fehlversuche
         {
             Console.WriteLine("Thread: Waiting");
             Thread.Sleep(5000);
             isOpen = false;
             try
             {
+                if(File.Exists(path))
                 using(Stream stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite))
                 {
                     Console.WriteLine("Thread: open");
@@ -103,7 +103,6 @@ public class Watcher
                         process.StartInfo.FileName = @"C:\Program Files (x86)\Herrmann Computer\File Watcher\CallDOCUFrame.bat";
                         server = "df59r3";
                         datenbank = "BNW";
-
                         process.StartInfo.Arguments = server + " " + datenbank + " \"" + path + "\" " + " HCPdateiimport";
                         process.StartInfo.UseShellExecute = false;
                         process.StartInfo.RedirectStandardInput = true;
@@ -118,7 +117,7 @@ public class Watcher
                 isOpen = true;
                 Console.WriteLine("Thread: Cant open the file " + path);
             }
-            i++;
+            i++; // Zähler für fehlversuche
         }
     }
 
@@ -128,29 +127,29 @@ public class Watcher
         string installpath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         String paths = e.OldFullPath + "|" + e.FullPath;
         String function = "HCPfilerename";
-            using (Process process = new Process())
-            {
-            //Import in DF
+        using (Process process = new Process())
+        {
+            //Rename entry in DF
             server = "df59r3";
             datenbank = "BNW";
             process.StartInfo.FileName = @"C:\Program Files (x86)\Herrmann Computer\File Watcher\CallDOCUFrame.bat";
-                process.StartInfo.Arguments = server + " " + datenbank + " \"" + paths + "\" " + function;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardInput = true;
-                process.Start();
-                process.Close();
-            }
+            process.StartInfo.Arguments = server + " " + datenbank + " \"" + paths + "\" " + function;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardInput = true;
+            process.Start();
+            process.Close();
+        }
     }
-    private static void OnDelete(object source, RenamedEventArgs e)
+    private static void OnDelete(object source, FileSystemEventArgs e)
     {
         // Specify what is done when a file is renamed.
-        Console.WriteLine($"File: {e.OldFullPath} renamed to {e.FullPath}");
+        Console.WriteLine($"File delete:{e.FullPath}");
         string installpath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-        String paths = e.OldFullPath + "|" + e.FullPath;
+        String paths = e.FullPath;
         String function = "HCPfiledelete";
         using (Process process = new Process())
         {
-            //Import in DF
+            //Delet entry in DF
             server = "df59r3";
             datenbank = "BNW";
             process.StartInfo.FileName = @"C:\Program Files (x86)\Herrmann Computer\File Watcher\CallDOCUFrame.bat";
